@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exchange Rate Dashboard</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+
+    <nav>
+
+        <div class="logo">
+            <i class="fa-solid fa-money-bill-trend-up"></i>
+            ExchangeRate Dashboard
+        </div>
+
+        <div class="nav-right">
+            <span id="lastUpdate">Loading...</span>
+        </div>
+
+    </nav>
+
+    <!-- ================= MAIN ================= -->
+
+    <div class="container">
+
+        <!-- LEFT -->
+
+        <div class="left-panel">
+
+            <div class="card">
+
+                <h2>
+                    Currency Converter
+                </h2>
+
+                <div class="form-group">
+
+                    <label>Amount</label>
+
+                    <input
+                        type="number"
+                        id="amount"
+                        value="1"
+                        min="1">
+
+                </div>
+
+                <div class="currency-row">
+
+                    <div class="form-group">
+
+                        <label>From</label>
+
+                        <select id="from">
+
+                            <option value="USD">USD</option>
+                            <option value="PHP">PHP</option>
+                            <option value="EUR">EUR</option>
+                            <option value="JPY">JPY</option>
+                            <option value="GBP">GBP</option>
+
+                        </select>
+
+                    </div>
+
+                    <button id="swapBtn" title="Swap currencies">
+
+                        <i class="fa-solid fa-right-left"></i>
+
+                    </button>
+
+                    <div class="form-group">
+
+                        <label>To</label>
+
+                        <select id="to">
+
+                            <option value="PHP">PHP</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="JPY">JPY</option>
+                            <option value="GBP">GBP</option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="result-box">
+
+                    <input
+                        type="text"
+                        id="result"
+                        readonly>
+
+                    <p id="rate"></p>
+
+                    <p id="error"></p>
+
+                </div>
+
+                <button class="track-btn" id="trackBtn">
+
+                    <i class="fa-solid fa-chart-line"></i>
+                    Track This Pair
+
+                </button>
+
+            </div>
+
+            <!-- DASHBOARD -->
+
+            <div class="dashboard">
+
+                <div class="info-card">
+
+                    <h3>Current Rate</h3>
+
+                    <span id="currentRate">--</span>
+
+                </div>
+
+                <div class="info-card">
+
+                    <h3>24h Change</h3>
+
+                    <span id="change24h" class="neutral">--</span>
+
+                </div>
+
+                <div class="info-card">
+
+                    <h3>Base</h3>
+
+                    <span id="baseCurrency">USD</span>
+
+                </div>
+
+                <div class="info-card">
+
+                    <h3>Target</h3>
+
+                    <span id="targetCurrency">PHP</span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT -->
+
+        <div class="right-panel">
+
+            <!-- REALTIME TRACKER -->
+
+            <div class="card">
+
+                <div class="tracker-header">
+
+                    <h2>Realtime Currency Tracker</h2>
+
+                    <span id="trackerPairLabel" class="tracker-pair">USD &rarr; PHP</span>
+
+                </div>
+
+                <div class="pair-chips" id="pairChips">
+
+                    <button class="chip active" data-from="USD" data-to="PHP">USD/PHP</button>
+                    <button class="chip" data-from="EUR" data-to="PHP">EUR/PHP</button>
+                    <button class="chip" data-from="JPY" data-to="PHP">JPY/PHP</button>
+                    <button class="chip" data-from="GBP" data-to="PHP">GBP/PHP</button>
+                    <button class="chip" data-from="USD" data-to="EUR">USD/EUR</button>
+
+                </div>
+
+                <div class="range-tabs" id="rangeTabs">
+
+                    <button class="range-tab active" data-range="1D">1D</button>
+                    <button class="range-tab" data-range="1M">1M</button>
+                    <button class="range-tab" data-range="1Y">1Y</button>
+                    <button class="range-tab" data-range="5Y">5Y</button>
+
+                </div>
+
+                <div class="tracker-stats">
+
+                    <span id="trackerRate">--</span>
+
+                    <span id="trackerChange" class="neutral">--</span>
+
+                </div>
+
+                <div class="chart-wrap">
+
+                    <canvas id="rateChart"></canvas>
+
+                    <p id="trackerNote"></p>
+
+                </div>
+
+            </div>
+
+            <!-- TABLE -->
+
+            <div class="card">
+
+                <h2>
+
+                    Exchange Rate Table
+
+                </h2>
+
+                <div class="table-scroll">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Currency</th>
+
+                                <th>Rate</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="rateTable">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <footer>
+
+        ExchangeRate Dashboard © 2026
+
+    </footer>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
