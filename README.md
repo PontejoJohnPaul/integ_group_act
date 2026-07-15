@@ -1,4 +1,4 @@
-# 💱 Currency Exchange Tracker Web App
+# Currency Exchange Tracker Web App
 
 Overview
 
