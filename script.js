@@ -1,267 +1,487 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
-    scroll-behavior: smooth;
-}
-
-body {
-    background: #f5f7fb;
-    color: #333;
-    line-height: 1.6;
-}
+const apiKey = "f28e54cd1a7b7a09e2874900";
+const EXCHANGE_API = "https://v6.exchangerate-api.com/v6";
 
 
+const FRANKFURTER_API = "https://api.frankfurter.dev/v1";
 
-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 18px 8%;
-    background: #fff;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 3px 15px rgba(0,0,0,.08);
-    z-index: 1000;
-}
+const CACHE_TTL_MS = 5 * 60 * 1000;
 
-.logo {
-    font-size: 24px;
-    font-weight: 700;
-    color: #2563eb;
-}
+const POLL_INTERVAL_MS = 10 * 60 * 1000;
 
-nav {
-    display: flex;
-    gap: 30px;
-}
+let chart;
+let latestCache = null; 
+let historyCache = {};  
+let changeCache = {};   
 
-nav a {
-    text-decoration: none;
-    color: #444;
-    font-weight: 500;
-    transition: .3s;
-}
+let trackerFrom = "USD";
+let trackerTo = "PHP";
+let trackerRange = "1D";
 
-nav a:hover {
-    color: #2563eb;
-}
+let pollTimer = null;
 
 
 
-.hero {
-    padding: 140px 8% 90px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 50px;
-    flex-wrap: wrap;
-}
+async function getLatestRates(base) {
 
-.hero-text {
-    flex: 1;
-    min-width: 320px;
-}
+    const isFresh =
+        latestCache &&
+        latestCache.base === base &&
+        (Date.now() - latestCache.fetchedAt) < CACHE_TTL_MS;
 
-.hero-text h1 {
-    font-size: 55px;
-    line-height: 1.2;
-    margin-bottom: 20px;
-}
-
-.hero-text span {
-    color: #2563eb;
-}
-
-.hero-text p {
-    font-size: 18px;
-    color: #666;
-    margin-bottom: 30px;
-    max-width: 600px;
-}
-
-.btn {
-    display: inline-block;
-    padding: 15px 35px;
-    background: #2563eb;
-    color: white;
-    border-radius: 40px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: .3s;
-}
-
-.btn:hover {
-    background: #1d4ed8;
-    transform: translateY(-3px);
-}
-
-.hero-card {
-    width: 360px;
-    background: white;
-    padding: 35px;
-    border-radius: 20px;
-    box-shadow: 0 15px 35px rgba(0,0,0,.08);
-}
-
-.hero-card h2 {
-    margin-bottom: 20px;
-}
-
-.rate {
-    display: flex;
-    justify-content: space-between;
-    padding: 15px 0;
-    border-bottom: 1px solid #eee;
-    font-size: 18px;
-}
-
-.live {
-    margin-top: 20px;
-    text-align: center;
-    color: #2563eb;
-    font-weight: 600;
-}
-
-
-
-.stats {
-    background: white;
-    padding: 70px 8%;
-    display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
-    text-align: center;
-}
-
-.stat {
-    margin: 20px;
-}
-
-.stat h2 {
-    font-size: 45px;
-    color: #2563eb;
-    margin-bottom: 10px;
-}
-
-
-
-.title {
-    text-align: center;
-    font-size: 38px;
-    margin-bottom: 60px;
-}
-
-
-
-.currencies {
-    padding: 90px 8%;
-    background: white;
-}
-
-.currency-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
-    gap: 25px;
-}
-
-.currency {
-    background: #2563eb;
-    color: white;
-    padding: 25px;
-    border-radius: 15px;
-    text-align: center;
-    font-weight: 600;
-    cursor: pointer;
-    transition: .3s;
-}
-
-.currency:hover {
-    transform: translateY(-5px);
-    background: #1d4ed8;
-}
-
-
-
-.about {
-    padding: 90px 8%;
-    text-align: center;
-}
-
-.about p {
-    max-width: 800px;
-    margin: auto;
-    color: #666;
-    line-height: 1.8;
-}
-
-
-
-footer {
-    background: #0f172a;
-    color: white;
-    text-align: center;
-    padding: 45px 20px;
-    margin-top: 60px;
-}
-
-footer h3 {
-    margin-bottom: 10px;
-}
-
-
-@media (max-width:900px){
-
-    header{
-        flex-direction:column;
-        gap:15px;
+    if (isFresh) {
+        return latestCache;
     }
 
-    nav{
-        gap:15px;
-        flex-wrap:wrap;
-        justify-content:center;
+    const response = await fetch(`${EXCHANGE_API}/${apiKey}/latest/${base}`);
+    const data = await response.json();
+
+    if (data.result !== "success") {
+        throw new Error("API Error");
     }
 
-    .hero{
-        flex-direction:column;
-        text-align:center;
-    }
+    latestCache = {
+        base,
+        rates: data.conversion_rates,
+        fetchedAt: Date.now()
+    };
 
-    .hero-card{
-        width:100%;
-        max-width:420px;
-    }
+    return latestCache;
 
-    .hero-text h1{
-        font-size:40px;
-    }
+}
 
-    .title{
-        font-size:30px;
+
+
+
+async function convertCurrency() {
+
+    const amount = parseFloat(document.getElementById("amount").value) || 0;
+    const from = document.getElementById("from").value;
+    const to = document.getElementById("to").value;
+
+    const result = document.getElementById("result");
+    const rateText = document.getElementById("rate");
+    const error = document.getElementById("error");
+
+    error.innerHTML = "";
+
+    try {
+
+        const cached = await getLatestRates(from);
+        const rate = cached.rates[to];
+        const answer = amount * rate;
+
+        result.value = answer.toFixed(2);
+        rateText.innerHTML = `1 ${from} = ${rate.toFixed(4)} ${to}`;
+
+        updateDashboard(cached.rates, from, to, rate);
+        updateTable(cached.rates);
+        updateTime();
+
+        recordLivePoint(from, to, rate);
+
+    } catch (err) {
+
+        console.log(err);
+        error.innerHTML = "Unable to retrieve exchange rate.";
+
     }
 
 }
 
-@media (max-width:600px){
 
-    .hero-text h1{
-        font-size:32px;
-    }
 
-    .hero-text p{
-        font-size:16px;
-    }
+async function updateDashboard(rates, from, to, rate) {
 
-    .stat h2{
-        font-size:36px;
-    }
+    document.getElementById("currentRate").innerHTML = rate.toFixed(4);
+    document.getElementById("baseCurrency").innerHTML = from;
+    document.getElementById("targetCurrency").innerHTML = to;
 
-    .currency-grid{
-        grid-template-columns:1fr;
+    const changeEl = document.getElementById("change24h");
+
+    try {
+
+        const prevRate = await getYesterdayRate(from, to);
+
+        if (prevRate) {
+            setChangeText(changeEl, rate, prevRate);
+        } else {
+            changeEl.className = "neutral";
+            changeEl.innerHTML = "--";
+        }
+
+    } catch (err) {
+        changeEl.className = "neutral";
+        changeEl.innerHTML = "--";
     }
 
 }
+
+async function getYesterdayRate(from, to) {
+
+    const dateISO = daysAgoISO(1);
+    const cacheKey = `${from}_${to}_${dateISO}`;
+
+    if (changeCache[cacheKey] !== undefined) {
+        return changeCache[cacheKey];
+    }
+
+    const yesterday = await fetchFrankfurterDate(dateISO, from);
+    const prevRate = yesterday?.rates?.[to] ?? null;
+
+    changeCache[cacheKey] = prevRate;
+    return prevRate;
+
+}
+
+function setChangeText(el, current, previous) {
+
+    const diff = current - previous;
+    const pct = (diff / previous) * 100;
+
+    const sign = diff >= 0 ? "+" : "";
+    el.innerHTML = `${sign}${pct.toFixed(2)}%`;
+    el.className = diff > 0 ? "positive" : diff < 0 ? "negative" : "neutral";
+
+}
+
+
+
+function updateTable(rates) {
+
+    const tbody = document.getElementById("rateTable");
+    tbody.innerHTML = "";
+
+    Object.entries(rates)
+        .slice(0, 25)
+        .forEach(([code, value]) => {
+
+            tbody.innerHTML += `
+            <tr>
+                <td>${code}</td>
+                <td>${value}</td>
+            </tr>
+            `;
+
+        });
+
+}
+
+
+
+function initTracker() {
+
+    document.querySelectorAll(".chip").forEach(chip => {
+        chip.addEventListener("click", () => {
+            setTrackerPair(chip.dataset.from, chip.dataset.to);
+        });
+    });
+
+    document.querySelectorAll(".range-tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+            document.querySelectorAll(".range-tab").forEach(t => t.classList.remove("active"));
+            tab.classList.add("active");
+            trackerRange = tab.dataset.range;
+            loadTracker();
+        });
+    });
+
+    document.getElementById("trackBtn").addEventListener("click", () => {
+        const from = document.getElementById("from").value;
+        const to = document.getElementById("to").value;
+        setTrackerPair(from, to);
+    });
+
+    startPolling();
+    loadTracker();
+
+}
+
+function setTrackerPair(from, to) {
+
+    trackerFrom = from;
+    trackerTo = to;
+
+    document.getElementById("trackerPairLabel").innerHTML = `${from} &rarr; ${to}`;
+
+    document.querySelectorAll(".chip").forEach(chip => {
+        chip.classList.toggle(
+            "active",
+            chip.dataset.from === from && chip.dataset.to === to
+        );
+    });
+
+    loadTracker();
+
+}
+
+async function loadTracker() {
+
+    const note = document.getElementById("trackerNote");
+    note.innerHTML = "";
+
+    try {
+
+        let labels, data;
+
+        if (trackerRange === "1D") {
+            ({ labels, data } = getLivePoints(trackerFrom, trackerTo));
+
+            if (data.length < 2) {
+                note.innerHTML =
+                    "Building today's chart from live readings \u2014 keep the page open and it fills in over time.";
+            }
+
+        } else {
+            ({ labels, data } = await getFrankfurterSeries(trackerFrom, trackerTo, trackerRange));
+        }
+
+        renderChart(labels, data, trackerTo);
+        updateTrackerStats(data);
+
+    } catch (err) {
+
+        console.log(err);
+        note.innerHTML = "Unable to load chart data for this pair.";
+        renderChart([], [], trackerTo);
+        updateTrackerStats([]);
+
+    }
+
+}
+
+function updateTrackerStats(data) {
+
+    const rateEl = document.getElementById("trackerRate");
+    const changeEl = document.getElementById("trackerChange");
+
+    if (!data.length) {
+        rateEl.innerHTML = "--";
+        changeEl.innerHTML = "--";
+        changeEl.className = "neutral";
+        return;
+    }
+
+    const latest = data[data.length - 1];
+    const first = data[0];
+
+    rateEl.innerHTML = latest.toFixed(4);
+    setChangeText(changeEl, latest, first);
+
+}
+
+function renderChart(labels, data, targetCode) {
+
+    const ctx = document.getElementById("rateChart");
+
+    if (chart) {
+        chart.destroy();
+    }
+
+    chart = new Chart(ctx, {
+
+        type: "line",
+
+        data: {
+            labels: labels,
+            datasets: [{
+                label: `Rate (${targetCode})`,
+                data: data,
+                borderColor: "#38bdf8",
+                backgroundColor: "rgba(56,189,248,.15)",
+                borderWidth: 3,
+                tension: .35,
+                fill: true,
+                pointRadius: labels.length > 40 ? 0 : 4,
+                pointBackgroundColor: "#38bdf8"
+            }]
+        },
+
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: false }
+            }
+        }
+
+    });
+
+}
+
+
+
+function livePointsKey(from, to) {
+    return `liveRates_${from}_${to}`;
+}
+
+function recordLivePoint(from, to, rate) {
+
+    const key = livePointsKey(from, to);
+    const now = Date.now();
+    const points = JSON.parse(localStorage.getItem(key) || "[]");
+
+    
+    const last = points[points.length - 1];
+    if (last && (now - last.t) < 60 * 1000) {
+        return;
+    }
+
+    points.push({ t: now, r: rate });
+
+    const cutoff = now - (24 * 60 * 60 * 1000);
+    const trimmed = points.filter(p => p.t >= cutoff);
+
+    localStorage.setItem(key, JSON.stringify(trimmed));
+
+    if (from === trackerFrom && to === trackerTo && trackerRange === "1D") {
+        const { labels, data } = getLivePoints(from, to);
+        renderChart(labels, data, to);
+        updateTrackerStats(data);
+    }
+
+}
+
+function getLivePoints(from, to) {
+
+    const key = livePointsKey(from, to);
+    const points = JSON.parse(localStorage.getItem(key) || "[]");
+
+    const labels = points.map(p =>
+        new Date(p.t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    );
+
+    const data = points.map(p => p.r);
+
+    return { labels, data };
+
+}
+
+function startPolling() {
+
+    if (pollTimer) {
+        clearInterval(pollTimer);
+    }
+
+    pollTimer = setInterval(async () => {
+
+        try {
+            const cached = await getLatestRates(trackerFrom);
+            const rate = cached.rates[trackerTo];
+            recordLivePoint(trackerFrom, trackerTo, rate);
+        } catch (err) {
+            console.log(err);
+        }
+
+    }, POLL_INTERVAL_MS);
+
+}
+
+
+
+function daysAgoISO(days) {
+    const d = new Date();
+    d.setDate(d.getDate() - days);
+    return d.toISOString().slice(0, 10);
+}
+
+async function fetchFrankfurterDate(dateISO, base) {
+
+    const response = await fetch(`${FRANKFURTER_API}/${dateISO}?base=${base}`);
+
+    if (!response.ok) {
+        return null;
+    }
+
+    return response.json();
+
+}
+
+async function getFrankfurterSeries(from, to, range) {
+
+    const cacheKey = `${from}_${to}_${range}`;
+
+    if (historyCache[cacheKey]) {
+        return historyCache[cacheKey];
+    }
+
+    const rangeDays = {
+        "1M": 30,
+        "1Y": 365,
+        "5Y": 365 * 5
+    };
+
+    const start = daysAgoISO(rangeDays[range]);
+    const end = daysAgoISO(0);
+
+    const url = `${FRANKFURTER_API}/${start}..${end}?base=${from}&symbols=${to}`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!data.rates) {
+        throw new Error("No historical data");
+    }
+
+
+    // (weekly points for 1Y, monthly points for 5Y)
+    const step = range === "1Y" ? 7 : range === "5Y" ? 30 : 1;
+    const sortedDates = Object.keys(data.rates).sort()
+        .filter((_, i, arr) => i % step === 0 || i === arr.length - 1);
+
+    const labels = sortedDates.map(date => {
+        const d = new Date(date);
+        return range === "1M"
+            ? d.toLocaleDateString([], { month: "short", day: "numeric" })
+            : d.toLocaleDateString([], { month: "short", year: "2-digit" });
+    });
+
+    const values = sortedDates.map(date => data.rates[date][to]);
+
+    const result = { labels, data: values };
+    historyCache[cacheKey] = result;
+
+    return result;
+
+}
+
+
+
+
+function updateTime() {
+
+    const now = new Date();
+    document.getElementById("lastUpdate").innerHTML =
+        "Last Updated : " + now.toLocaleString();
+
+}
+
+
+
+document.getElementById("swapBtn").addEventListener("click", () => {
+
+    const from = document.getElementById("from");
+    const to = document.getElementById("to");
+
+    const temp = from.value;
+    from.value = to.value;
+    to.value = temp;
+
+    convertCurrency();
+
+});
+
+
+
+
+document.getElementById("amount").addEventListener("input", convertCurrency);
+document.getElementById("from").addEventListener("change", convertCurrency);
+document.getElementById("to").addEventListener("change", convertCurrency);
+
+
+
+window.onload = () => {
+    convertCurrency();
+    initTracker();
+};
