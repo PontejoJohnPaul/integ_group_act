@@ -52,6 +52,33 @@ async function getLatestRates(base) {
 
 
 
+async function populateCurrencyDropdowns() {
+
+    try {
+
+        const cached = await getLatestRates("USD");
+        const currencies = Object.keys(cached.rates).sort();
+
+        const fromSel = document.getElementById("from");
+        const toSel = document.getElementById("to");
+
+        const prevFrom = fromSel.value || "USD";
+        const prevTo = toSel.value || "PHP";
+
+        fromSel.innerHTML = "";
+        toSel.innerHTML = "";
+
+        currencies.forEach(code => {
+            fromSel.innerHTML += `<option value="${code}"${code === prevFrom ? " selected" : ""}>${code}</option>`;
+            toSel.innerHTML += `<option value="${code}"${code === prevTo ? " selected" : ""}>${code}</option>`;
+        });
+
+    } catch (err) {
+        console.log("Could not populate currencies:", err);
+    }
+
+}
+
 async function convertCurrency() {
 
     const amount = parseFloat(document.getElementById("amount").value) || 0;
@@ -311,7 +338,6 @@ function renderChart(labels, data, targetCode) {
 }
 
 
-
 function livePointsKey(from, to) {
     return `liveRates_${from}_${to}`;
 }
@@ -481,7 +507,8 @@ document.getElementById("to").addEventListener("change", convertCurrency);
 
 
 
-window.onload = () => {
+window.onload = async () => {
+    await populateCurrencyDropdowns();
     convertCurrency();
     initTracker();
 };
