@@ -8,13 +8,13 @@ This project demonstrates the integration of a third-party REST API using JavaSc
 
 Features
 
-- 🌍 Real-time currency conversion
-- 💵 Supports multiple international currencies
-- 📈 Displays the latest exchange rates
-- 📊 View historical exchange rate data
-- 🔄 Automatic calculation based on user input
-- ⚠️ Error handling for failed API requests and invalid inputs
-- 📱 Responsive and user-friendly interface
+-  Real-time currency conversion
+-  Supports multiple international currencies
+-  Displays the latest exchange rates
+-  View historical exchange rate data
+-  Automatic calculation based on user input
+-  Error handling for failed API requests and invalid inputs
+-  Responsive and user-friendly interface
 
 ---
 
@@ -62,12 +62,6 @@ Technologies Demonstrated
 
 - REST API Integration
 - HTTP GET Requests
-- Asynchronous JavaScript (Async/Await)
-- JSON Data Processing
-- DOM Manipulation
-- Error Handling
-
-
 
 Installation
 
@@ -80,16 +74,6 @@ Installation
 Or use **Live Server** in Visual Studio Code for a better development experience.
 
 
-
- Future Improvements
-
-- Currency exchange rate charts
-- Dark mode
-- Favorite currencies
-- Search currency feature
-- Exchange rate notifications
-- Currency comparison dashboard
-
 Developers
 
 - **John Paul S. Pontejo**
@@ -98,6 +82,3 @@ Developers
 
 ---
 
-License
-
-This project was developed for educational purposes as part of an API Integration coursework.
