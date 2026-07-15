@@ -21,10 +21,9 @@ Features
 ## Technologies Used
 
 - HTML5
-- CSS3
-- JavaScript (ES6)
-- Fetch API
-- ExchangeRate-API (REST API)
+- CSS
+- JavaScript
+- ExchangeRate-API
 
 ---
 
