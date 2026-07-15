@@ -4,7 +4,7 @@ Overview
 
 The **Currency Exchange Tracker Web App** is a web-based application that provides users with real-time currency conversion using the **ExchangeRate-API**. It enables users to convert one currency to another accurately based on the latest exchange rates while also displaying exchange rate information and historical data for selected currencies.
 
-This project demonstrates the integration of a third-party REST API using JavaScript's **Fetch API** and implements asynchronous data retrieval through **GET requests**. The application focuses on providing an intuitive, responsive, and user-friendly interface for monitoring and converting currencies.
+This project demonstrates the integration of **ExchangeRate-API** and implements data retrieval through **GET requests**. The application focuses on providing an intuitive, responsive, and user-friendly interface for monitoring and converting currencies.
 
 Features
 
@@ -13,7 +13,6 @@ Features
 -  Displays the latest exchange rates
 -  View historical exchange rate data
 -  Automatic calculation based on user input
--  Error handling for failed API requests and invalid inputs
 -  Responsive and user-friendly interface
 
 ---
@@ -29,7 +28,7 @@ Features
 
 API Used
 
- ExchangeRate-API
+**ExchangeRate-API**
 
 This application retrieves live exchange rate data using the ExchangeRate-API through HTTP GET requests.
 
@@ -73,11 +72,11 @@ Installation
 Or use **Live Server** in Visual Studio Code for a better development experience.
 
 
-Developers
+Developers & Contributions
 
-- **John Paul S. Pontejo**
-- **Kowein C. Lumapaz**
-- **John Vincent Losa**
+- **John Paul S. Pontejo** - Dashboard UI, History of Currency Data feature, fixed conversion feature
+- **Kowein C. Lumapaz** - Landing Page, Real-time Currency tracking feature
+- **John Vincent Losa** - Fixed dashboard UI, Conversion feature
 
 ---
 
