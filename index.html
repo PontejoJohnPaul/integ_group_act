@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Currency Converter</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Currency Converter</h1>
+
+<div class="converter">
+
+<input
+type="number"
+id="amount"
+value="1"
+min="1">
+
+<select id="from">
+
+<option value="USD">United States Dollar</option>
+<option value="PHP">Philippine Peso</option>
+<option value="EUR">Euro</option>
+<option value="JPY">Japanese Yen</option>
+<option value="GBP">British Pound</option>
+
+</select>
+
+</div>
+
+<div class="converter">
+
+<input
+type="text"
+id="result"
+readonly>
+
+<select id="to">
+
+<option value="PHP">Philippine Peso</option>
+<option value="USD">United States Dollar</option>
+<option value="EUR">Euro</option>
+<option value="JPY">Japanese Yen</option>
+<option value="GBP">British Pound</option>
+
+</select>
+
+</div>
+
+<button onclick="convertCurrency()">
+Convert
+</button>
+
+<p id="rate"></p>
+
+<p id="error"></p>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
