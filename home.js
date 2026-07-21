@@ -29,5 +29,5 @@ function animate(id, target) {
 }
 
 animate("countries", 180);
-animate("currenciesCount", 170);
-animate("updates", 1440);
+animate("currenciesCount", 165);
+// "24/7" is not a numeric value — animation removed (was targeting a non-existent id="updates")

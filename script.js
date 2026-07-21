@@ -74,7 +74,9 @@ async function populateCurrencyDropdowns() {
         });
 
     } catch (err) {
-        console.log("Could not populate currencies:", err);
+        console.error("Could not populate currencies:", err);
+        const errorEl = document.getElementById("error");
+        if (errorEl) errorEl.innerHTML = "⚠ Could not load currency list. Please check your connection and refresh.";
     }
 
 }
@@ -90,6 +92,8 @@ async function convertCurrency() {
     const error = document.getElementById("error");
 
     error.innerHTML = "";
+    result.value = "Converting...";
+    rateText.innerHTML = "";
 
     try {
 
@@ -108,8 +112,9 @@ async function convertCurrency() {
 
     } catch (err) {
 
-        console.log(err);
-        error.innerHTML = "Unable to retrieve exchange rate.";
+        console.error("Conversion failed:", err);
+        result.value = "";
+        error.innerHTML = "⚠ Unable to retrieve exchange rate. Please check your connection.";
 
     }
 
@@ -267,8 +272,8 @@ async function loadTracker() {
 
     } catch (err) {
 
-        console.log(err);
-        note.innerHTML = "Unable to load chart data for this pair.";
+        console.error("Tracker chart load failed:", err);
+        note.innerHTML = "⚠ Unable to load chart data for this pair.";
         renderChart([], [], trackerTo);
         updateTrackerStats([]);
 
@@ -397,7 +402,7 @@ function startPolling() {
             const rate = cached.rates[trackerTo];
             recordLivePoint(trackerFrom, trackerTo, rate);
         } catch (err) {
-            console.log(err);
+            console.warn("Auto-poll failed:", err);
         }
 
     }, POLL_INTERVAL_MS);
