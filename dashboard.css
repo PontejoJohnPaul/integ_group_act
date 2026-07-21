@@ -283,8 +283,9 @@ select:focus{
 }
 
 .chip.active{
-    background:#2563eb;
-    color:#fff;
+    background:linear-gradient(90deg,#2563eb,#38bdf8);
+    color:#0f172a;
+    box-shadow:0 8px 24px rgba(56,189,248,.12);
 }
 
 /* SMART RANGE PICKER & PRESETS */
@@ -324,8 +325,19 @@ select:focus{
 }
 
 .range-tab.active{
-    background:#38bdf8;
+    background:linear-gradient(90deg,#2563eb,#38bdf8);
     color:#0f172a;
+    box-shadow:0 8px 20px rgba(56,189,248,.12);
+}
+
+/* Generic button visual parity */
+button, .track-btn, .chip, .range-tab, #swapBtn{
+    transition:box-shadow .18s ease, transform .12s ease;
+}
+
+button:focus, .track-btn:focus, .chip:focus, .range-tab:focus, #swapBtn:focus{
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(56,189,248,.08);
 }
 
 .custom-date-picker {
@@ -403,6 +415,43 @@ select:focus{
 
 .chart-wrap{
     position:relative;
+    padding-top:48px;
+}
+
+.chart-toolbar{
+    position:absolute;
+    right:16px;
+    top:12px;
+    display:flex;
+    gap:8px;
+    z-index:10;
+}
+
+.chart-toolbar button{
+    background:#334155;
+    color:#cbd5e1;
+    border:none;
+    padding:8px 12px;
+    border-radius:10px;
+    font-weight:600;
+    cursor:pointer;
+    font-size:13px;
+    box-shadow:0 6px 18px rgba(2,6,23,.45);
+    transition:transform .18s ease, background .18s ease, color .18s ease;
+}
+
+.chart-toolbar button:hover{
+    background:#38bdf8;
+    color:#0f172a;
+    transform:translateY(-3px);
+}
+
+.chart-toolbar button:active{
+    transform:translateY(-1px) scale(.995);
+}
+
+.chart-toolbar button:focus{
+    outline:2px solid rgba(56,189,248,.25);
 }
 
 #trackerNote{

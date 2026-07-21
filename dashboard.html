@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js"></script>
 
 </head>
 
@@ -176,9 +177,16 @@
 
                 </div>
 
-                <!-- CUSTOM DATE-RANGE PICKER -->
+                <!-- RANGE TABS & CUSTOM DATE-RANGE PICKER -->
 
-                <div class="range-picker-wrapper">
+                <div class="range-tabs-wrapper">
+
+                    <div class="range-tabs">
+                        <button class="range-tab active" data-range="1D">1D</button>
+                        <button class="range-tab" data-range="1W">1W</button>
+                        <button class="range-tab" data-range="1M">1M</button>
+                        <button class="range-tab" data-range="1Y">1Y</button>
+                    </div>
 
                     <div class="custom-date-picker">
 
@@ -211,6 +219,11 @@
                 </div>
 
                 <div class="chart-wrap">
+
+                    <div class="chart-toolbar">
+                        <button id="exportCsvBtn" title="Export CSV">Export CSV</button>
+                        <button id="resetZoomBtn" title="Reset Zoom">Reset Zoom</button>
+                    </div>
 
                     <canvas id="rateChart"></canvas>
 

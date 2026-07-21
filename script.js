@@ -256,7 +256,7 @@ async function loadTracker() {
         let labels, data;
 
         if (trackerRange === "1D") {
-            ({ labels, data } = getLivePoints(trackerFrom, trackerTo));
+                ({ labels, data, raw } = getLivePoints(trackerFrom, trackerTo));
 
             if (data.length < 2) {
                 note.innerHTML =
@@ -264,10 +264,10 @@ async function loadTracker() {
             }
 
         } else {
-            ({ labels, data } = await getFrankfurterSeries(trackerFrom, trackerTo, trackerRange));
+            ({ labels, data, raw } = await getFrankfurterSeries(trackerFrom, trackerTo, trackerRange));
         }
 
-        renderChart(labels, data, trackerTo);
+        renderChart(labels, data, trackerTo, raw);
         updateTrackerStats(data);
 
     } catch (err) {
@@ -301,7 +301,7 @@ function updateTrackerStats(data) {
 
 }
 
-function renderChart(labels, data, targetCode) {
+function renderChart(labels, data, targetCode, rawLabels = null) {
 
     const ctx = document.getElementById("rateChart");
 
@@ -331,15 +331,42 @@ function renderChart(labels, data, targetCode) {
         options: {
             responsive: true,
             plugins: {
-                legend: { display: false }
+                legend: { display: false },
+                tooltip: { mode: 'index', intersect: false },
+                zoom: {
+                    pan: {
+                        enabled: true,
+                        mode: 'x',
+                    },
+                    zoom: {
+                        wheel: { enabled: true },
+                        pinch: { enabled: true },
+                        mode: 'x',
+                    }
+                }
             },
             scales: {
+                x: { display: true },
                 y: { beginAtZero: false }
             }
         }
 
     });
-
+    // Prepare exportable data: try to use provided raw labels (ISO) when available
+    try {
+        const rows = [];
+        for (let i = 0; i < labels.length; i++) {
+            const iso = (rawLabels && rawLabels[i]) ? rawLabels[i] : null;
+            rows.push({ iso, label: labels[i], value: data[i] });
+        }
+        chart._exportData = {
+            pair: `${trackerFrom}->${trackerTo}`,
+            range: trackerRange,
+            rows
+        };
+    } catch (err) {
+        chart._exportData = null;
+    }
 }
 
 
@@ -367,8 +394,8 @@ function recordLivePoint(from, to, rate) {
     localStorage.setItem(key, JSON.stringify(trimmed));
 
     if (from === trackerFrom && to === trackerTo && trackerRange === "1D") {
-        const { labels, data } = getLivePoints(from, to);
-        renderChart(labels, data, to);
+        const { labels, data, raw } = getLivePoints(from, to);
+        renderChart(labels, data, to, raw);
         updateTrackerStats(data);
     }
 
@@ -383,9 +410,11 @@ function getLivePoints(from, to) {
         new Date(p.t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     );
 
+    const raw = points.map(p => new Date(p.t).toISOString());
+
     const data = points.map(p => p.r);
 
-    return { labels, data };
+    return { labels, data, raw };
 
 }
 
@@ -438,6 +467,8 @@ async function getFrankfurterSeries(from, to, range) {
     }
 
     const rangeDays = {
+        "1D": 1,
+        "1W": 7,
         "1M": 30,
         "1Y": 365,
         "5Y": 365 * 5
@@ -470,11 +501,64 @@ async function getFrankfurterSeries(from, to, range) {
 
     const values = sortedDates.map(date => data.rates[date][to]);
 
-    const result = { labels, data: values };
+    const result = { labels, data: values, raw: sortedDates };
     historyCache[cacheKey] = result;
 
     return result;
 
+}
+
+
+// Export the currently displayed chart data to CSV
+function exportChartCSV() {
+    try {
+        if (!chart) return;
+
+        const exportInfo = chart._exportData;
+
+        let csv = '';
+
+        // BOM for Excel compatibility
+        const BOM = '\uFEFF';
+
+        if (exportInfo) {
+            const nowIso = new Date().toISOString();
+            csv += `Exported At,${nowIso}\n`;
+            csv += `Pair,${exportInfo.pair}\n`;
+            csv += `Range,${exportInfo.range}\n`;
+            csv += '\n';
+            csv += 'Date (ISO),Label,Rate\n';
+            exportInfo.rows.forEach(r => {
+                const date = r.iso ? r.iso : '';
+                const label = String(r.label || '');
+                const rate = r.value != null ? r.value : '';
+                csv += `"${date}","${label}","${rate}"\n`;
+            });
+        } else {
+            const labels = chart.data.labels || [];
+            const values = chart.data.datasets?.[0]?.data || [];
+            csv += 'Label,Rate\n';
+            for (let i = 0; i < labels.length; i++) {
+                csv += `"${labels[i]}","${values[i]}"\n`;
+            }
+        }
+
+        const content = BOM + csv;
+        const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+
+        const pairSafe = (exportInfo && exportInfo.pair) ? exportInfo.pair.replace(/[^A-Za-z0-9\-]/g, '_') : 'rates';
+        const dateSafe = new Date().toISOString().slice(0,10);
+        a.href = url;
+        a.download = `${pairSafe}_${trackerRange || 'range'}_${dateSafe}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        console.error('CSV export failed:', err);
+    }
 }
 
 
@@ -517,3 +601,20 @@ window.onload = async () => {
     convertCurrency();
     initTracker();
 };
+
+// Attach chart control buttons
+document.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'exportCsvBtn') {
+        exportChartCSV();
+    }
+
+    if (e.target && e.target.id === 'resetZoomBtn') {
+        try {
+            if (chart && typeof chart.resetZoom === 'function') {
+                chart.resetZoom();
+            }
+        } catch (err) {
+            console.error('Reset zoom failed:', err);
+        }
+    }
+});
