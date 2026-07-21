@@ -90,7 +90,6 @@ nav{
 /* FORM */
 
 .form-group{
-    
     margin-bottom:18px;
 }
 
@@ -284,14 +283,25 @@ select:focus{
 }
 
 .chip.active{
-    background:#2563eb;
-    color:#fff;
+    background:linear-gradient(90deg,#2563eb,#38bdf8);
+    color:#0f172a;
+    box-shadow:0 8px 24px rgba(56,189,248,.12);
+}
+
+/* SMART RANGE PICKER & PRESETS */
+
+.range-picker-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
 .range-tabs{
     display:flex;
-    gap:8px;
-    margin-bottom:20px;
+    gap:6px;
     background:#0f172a;
     padding:6px;
     border-radius:12px;
@@ -302,9 +312,9 @@ select:focus{
     background:transparent;
     border:none;
     color:#94a3b8;
-    padding:9px 20px;
+    padding:8px 16px;
     border-radius:8px;
-    font-size:14px;
+    font-size:13px;
     font-weight:600;
     cursor:pointer;
     transition:.25s;
@@ -315,8 +325,57 @@ select:focus{
 }
 
 .range-tab.active{
-    background:#38bdf8;
+    background:linear-gradient(90deg,#2563eb,#38bdf8);
     color:#0f172a;
+    box-shadow:0 8px 20px rgba(56,189,248,.12);
+}
+
+/* Generic button visual parity */
+button, .track-btn, .chip, .range-tab, #swapBtn{
+    transition:box-shadow .18s ease, transform .12s ease;
+}
+
+button:focus, .track-btn:focus, .chip:focus, .range-tab:focus, #swapBtn:focus{
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(56,189,248,.08);
+}
+
+.custom-date-picker {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #0f172a;
+    padding: 6px 14px;
+    border-radius: 12px;
+}
+
+.custom-date-picker .date-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.custom-date-picker label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+.custom-date-picker input[type="date"] {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background: #1e293b;
+    color: #38bdf8;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    width: auto;
+}
+
+.custom-date-picker input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(70%) sepia(50%) saturate(1000%) hue-rotate(170deg);
+    cursor: pointer;
 }
 
 .tracker-stats{
@@ -356,6 +415,43 @@ select:focus{
 
 .chart-wrap{
     position:relative;
+    padding-top:48px;
+}
+
+.chart-toolbar{
+    position:absolute;
+    right:16px;
+    top:12px;
+    display:flex;
+    gap:8px;
+    z-index:10;
+}
+
+.chart-toolbar button{
+    background:#334155;
+    color:#cbd5e1;
+    border:none;
+    padding:8px 12px;
+    border-radius:10px;
+    font-weight:600;
+    cursor:pointer;
+    font-size:13px;
+    box-shadow:0 6px 18px rgba(2,6,23,.45);
+    transition:transform .18s ease, background .18s ease, color .18s ease;
+}
+
+.chart-toolbar button:hover{
+    background:#38bdf8;
+    color:#0f172a;
+    transform:translateY(-3px);
+}
+
+.chart-toolbar button:active{
+    transform:translateY(-1px) scale(.995);
+}
+
+.chart-toolbar button:focus{
+    outline:2px solid rgba(56,189,248,.25);
 }
 
 #trackerNote{
@@ -432,77 +528,70 @@ footer{
     color:#94a3b8;
 }
 
-/* MOBILE */
+/* MOBILE RESPONSIVENESS */
 
 @media(max-width:900px){
+    .container{
+        grid-template-columns:1fr;
+    }
 
-.container{
+    .dashboard{
+        grid-template-columns:1fr 1fr;
+    }
 
-grid-template-columns:1fr;
-
-}
-
-.dashboard{
-
-grid-template-columns:1fr 1fr;
-
-}
-
-nav{
-
-flex-wrap:wrap;
-gap:12px;
-
-}
-
+    nav{
+        flex-wrap:wrap;
+        gap:12px;
+    }
 }
 
 @media(max-width:600px){
+    .currency-row{
+        flex-direction:column;
+    }
 
-.currency-row{
+    #swapBtn{
+        width:100%;
+        border-radius:10px;
+    }
 
-flex-direction:column;
+    .dashboard{
+        grid-template-columns:1fr;
+    }
 
-}
+    .tracker-header{
+        flex-direction:column;
+        align-items:flex-start;
+    }
 
-#swapBtn{
+    .range-picker-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+    }
 
-width:100%;
+    .range-tabs{
+        width:100%;
+    }
 
-border-radius:10px;
+    .range-tab{
+        flex:1;
+        text-align:center;
+    }
 
-}
+    .custom-date-picker {
+        flex-direction: column;
+        align-items: stretch;
+    }
 
-.dashboard{
+    .custom-date-picker .date-field {
+        justify-content: space-between;
+    }
 
-grid-template-columns:1fr;
+    .custom-date-picker input[type="date"] {
+        width: 100%;
+    }
 
-}
-
-.tracker-header{
-
-flex-direction:column;
-align-items:flex-start;
-
-}
-
-.range-tabs{
-
-width:100%;
-
-}
-
-.range-tab{
-
-flex:1;
-text-align:center;
-
-}
-
-.table-scroll{
-
-max-height:320px;
-
-}
-
+    .table-scroll{
+        max-height:320px;
+    }
 }
