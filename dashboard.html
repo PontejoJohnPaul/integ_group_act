@@ -19,7 +19,6 @@
 
 <body>
 
-
     <nav>
 
         <div class="nav-left">
@@ -37,7 +36,7 @@
         </div>
 
         <div class="nav-right">
-            <span id="lastUpdate">  </span>
+            <span id="lastUpdate"> </span>
         </div>
 
     </nav>
@@ -46,7 +45,7 @@
 
     <div class="container">
 
-        <!-- LEFT -->
+        <!-- LEFT PANEL -->
 
         <div class="left-panel">
 
@@ -111,7 +110,7 @@
 
             </div>
 
-            <!-- DASHBOARD -->
+            <!-- DASHBOARD CARDS -->
 
             <div class="dashboard">
 
@@ -151,7 +150,7 @@
 
         </div>
 
-        <!-- RIGHT -->
+        <!-- RIGHT PANEL -->
 
         <div class="right-panel">
 
@@ -177,12 +176,29 @@
 
                 </div>
 
-                <div class="range-tabs" id="rangeTabs">
+                <!-- CUSTOM DATE-RANGE PICKER -->
 
-                    <button class="range-tab active" data-range="1D">1D</button>
-                    <button class="range-tab" data-range="1M">1M</button>
-                    <button class="range-tab" data-range="1Y">1Y</button>
-                    <button class="range-tab" data-range="5Y">5Y</button>
+                <div class="range-picker-wrapper">
+
+                    <div class="custom-date-picker">
+
+                        <div class="date-field">
+
+                            <label for="startDate">From:</label>
+
+                            <input type="date" id="startDate">
+
+                        </div>
+
+                        <div class="date-field">
+
+                            <label for="endDate">To:</label>
+
+                            <input type="date" id="endDate">
+
+                        </div>
+
+                    </div>
 
                 </div>
 
@@ -204,7 +220,7 @@
 
             </div>
 
-            <!-- TABLE -->
+            <!-- CURRENCY TABLE -->
 
             <div class="card">
 
@@ -223,7 +239,6 @@
                             <tr>
 
                                 <th>Currency</th>
-
 
                                 <th>Rate</th>
 
