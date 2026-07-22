@@ -56,6 +56,29 @@
                     Currency Converter
                 </h2>
 
+                <!-- Country Search -->
+                <div class="currency-row">
+                    <div class="form-group country-search-group" style="flex:1;">
+                        <label>Search "From" Country</label>
+                        <div class="country-search-wrap">
+                            <i class="fa-solid fa-earth-asia country-search-icon"></i>
+                            <input type="text" id="countrySearchFrom" placeholder="e.g. United States" autocomplete="off">
+                            <div id="countryDropdownFrom" class="country-dropdown" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <div style="width:55px;"></div> <!-- Spacer for alignment with swap button -->
+
+                    <div class="form-group country-search-group" style="flex:1;">
+                        <label>Search "To" Country</label>
+                        <div class="country-search-wrap">
+                            <i class="fa-solid fa-earth-asia country-search-icon"></i>
+                            <input type="text" id="countrySearchTo" placeholder="e.g. Philippines" autocomplete="off">
+                            <div id="countryDropdownTo" class="country-dropdown" style="display:none;"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group">
 
                     <label>Amount</label>
@@ -179,14 +202,9 @@
 
                 <!-- RANGE TABS & CUSTOM DATE-RANGE PICKER -->
 
-                <div class="range-tabs-wrapper">
+                <div class="range-picker-wrapper">
 
-                    <div class="range-tabs">
-                        <button class="range-tab active" data-range="1D">1D</button>
-                        <button class="range-tab" data-range="1W">1W</button>
-                        <button class="range-tab" data-range="1M">1M</button>
-                        <button class="range-tab" data-range="1Y">1Y</button>
-                    </div>
+
 
                     <div class="custom-date-picker">
 
@@ -208,7 +226,7 @@
 
                     </div>
 
-                </div>
+                </div><!-- end range-picker-wrapper -->
 
                 <div class="tracker-stats">
 

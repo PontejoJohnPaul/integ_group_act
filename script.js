@@ -15,7 +15,6 @@ let changeCache = {};
 
 let trackerFrom = "USD";
 let trackerTo = "PHP";
-let trackerRange = "1D";
 
 let pollTimer = null;
 
@@ -208,14 +207,22 @@ function initTracker() {
         });
     });
 
-    document.querySelectorAll(".range-tab").forEach(tab => {
-        tab.addEventListener("click", () => {
-            document.querySelectorAll(".range-tab").forEach(t => t.classList.remove("active"));
-            tab.classList.add("active");
-            trackerRange = tab.dataset.range;
-            loadTracker();
-        });
-    });
+    const startInput = document.getElementById("startDate");
+    const endInput = document.getElementById("endDate");
+
+    // Default to past 1 month
+    startInput.value = daysAgoISO(30);
+    endInput.value = daysAgoISO(0);
+
+    const updateDates = () => {
+        if (startInput.value > endInput.value) {
+            startInput.value = endInput.value;
+        }
+        loadTracker();
+    };
+
+    startInput.addEventListener("change", updateDates);
+    endInput.addEventListener("change", updateDates);
 
     document.getElementById("trackBtn").addEventListener("click", () => {
         const from = document.getElementById("from").value;
@@ -253,19 +260,11 @@ async function loadTracker() {
 
     try {
 
-        let labels, data;
+        let labels, data, raw;
+        const startDate = document.getElementById("startDate").value;
+        const endDate = document.getElementById("endDate").value;
 
-        if (trackerRange === "1D") {
-                ({ labels, data, raw } = getLivePoints(trackerFrom, trackerTo));
-
-            if (data.length < 2) {
-                note.innerHTML =
-                    "Building today's chart from live readings \u2014 keep the page open and it fills in over time.";
-            }
-
-        } else {
-            ({ labels, data, raw } = await getFrankfurterSeries(trackerFrom, trackerTo, trackerRange));
-        }
+        ({ labels, data, raw } = await getFrankfurterSeries(trackerFrom, trackerTo, startDate, endDate));
 
         renderChart(labels, data, trackerTo, raw);
         updateTrackerStats(data);
@@ -458,24 +457,13 @@ async function fetchFrankfurterDate(dateISO, base) {
 
 }
 
-async function getFrankfurterSeries(from, to, range) {
+async function getFrankfurterSeries(from, to, start, end) {
 
-    const cacheKey = `${from}_${to}_${range}`;
+    const cacheKey = `${from}_${to}_${start}_${end}`;
 
     if (historyCache[cacheKey]) {
         return historyCache[cacheKey];
     }
-
-    const rangeDays = {
-        "1D": 1,
-        "1W": 7,
-        "1M": 30,
-        "1Y": 365,
-        "5Y": 365 * 5
-    };
-
-    const start = daysAgoISO(rangeDays[range]);
-    const end = daysAgoISO(0);
 
     const url = `${FRANKFURTER_API}/${start}..${end}?base=${from}&symbols=${to}`;
 
@@ -487,14 +475,20 @@ async function getFrankfurterSeries(from, to, range) {
     }
 
 
-    // (weekly points for 1Y, monthly points for 5Y)
-    const step = range === "1Y" ? 7 : range === "5Y" ? 30 : 1;
+    const startD = new Date(start);
+    const endD = new Date(end);
+    const daysDiff = (endD - startD) / (1000 * 60 * 60 * 24);
+
+    let step = 1;
+    if (daysDiff > 365) step = 30;
+    else if (daysDiff > 90) step = 7;
+
     const sortedDates = Object.keys(data.rates).sort()
         .filter((_, i, arr) => i % step === 0 || i === arr.length - 1);
 
     const labels = sortedDates.map(date => {
         const d = new Date(date);
-        return range === "1M"
+        return daysDiff <= 90
             ? d.toLocaleDateString([], { month: "short", day: "numeric" })
             : d.toLocaleDateString([], { month: "short", year: "2-digit" });
     });
@@ -551,7 +545,7 @@ function exportChartCSV() {
         const pairSafe = (exportInfo && exportInfo.pair) ? exportInfo.pair.replace(/[^A-Za-z0-9\-]/g, '_') : 'rates';
         const dateSafe = new Date().toISOString().slice(0,10);
         a.href = url;
-        a.download = `${pairSafe}_${trackerRange || 'range'}_${dateSafe}.csv`;
+        a.download = `${pairSafe}_custom_${dateSafe}.csv`;
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -601,6 +595,238 @@ window.onload = async () => {
     convertCurrency();
     initTracker();
 };
+
+// =========================================================
+//  COUNTRY → CURRENCY SEARCH
+// =========================================================
+
+const COUNTRY_CURRENCY_MAP = [
+    { country: "Afghanistan", currency: "AFN" },
+    { country: "Albania", currency: "ALL" },
+    { country: "Algeria", currency: "DZD" },
+    { country: "Angola", currency: "AOA" },
+    { country: "Argentina", currency: "ARS" },
+    { country: "Armenia", currency: "AMD" },
+    { country: "Australia", currency: "AUD" },
+    { country: "Austria", currency: "EUR" },
+    { country: "Azerbaijan", currency: "AZN" },
+    { country: "Bahrain", currency: "BHD" },
+    { country: "Bangladesh", currency: "BDT" },
+    { country: "Belarus", currency: "BYN" },
+    { country: "Belgium", currency: "EUR" },
+    { country: "Bolivia", currency: "BOB" },
+    { country: "Bosnia and Herzegovina", currency: "BAM" },
+    { country: "Botswana", currency: "BWP" },
+    { country: "Brazil", currency: "BRL" },
+    { country: "Brunei", currency: "BND" },
+    { country: "Bulgaria", currency: "BGN" },
+    { country: "Cambodia", currency: "KHR" },
+    { country: "Cameroon", currency: "XAF" },
+    { country: "Canada", currency: "CAD" },
+    { country: "Chile", currency: "CLP" },
+    { country: "China", currency: "CNY" },
+    { country: "Colombia", currency: "COP" },
+    { country: "Costa Rica", currency: "CRC" },
+    { country: "Croatia", currency: "EUR" },
+    { country: "Cuba", currency: "CUP" },
+    { country: "Cyprus", currency: "EUR" },
+    { country: "Czech Republic", currency: "CZK" },
+    { country: "Czechia", currency: "CZK" },
+    { country: "Denmark", currency: "DKK" },
+    { country: "Dominican Republic", currency: "DOP" },
+    { country: "Ecuador", currency: "USD" },
+    { country: "Egypt", currency: "EGP" },
+    { country: "El Salvador", currency: "USD" },
+    { country: "Ethiopia", currency: "ETB" },
+    { country: "Finland", currency: "EUR" },
+    { country: "France", currency: "EUR" },
+    { country: "Georgia", currency: "GEL" },
+    { country: "Germany", currency: "EUR" },
+    { country: "Ghana", currency: "GHS" },
+    { country: "Greece", currency: "EUR" },
+    { country: "Guatemala", currency: "GTQ" },
+    { country: "Honduras", currency: "HNL" },
+    { country: "Hong Kong", currency: "HKD" },
+    { country: "Hungary", currency: "HUF" },
+    { country: "Iceland", currency: "ISK" },
+    { country: "India", currency: "INR" },
+    { country: "Indonesia", currency: "IDR" },
+    { country: "Iran", currency: "IRR" },
+    { country: "Iraq", currency: "IQD" },
+    { country: "Ireland", currency: "EUR" },
+    { country: "Israel", currency: "ILS" },
+    { country: "Italy", currency: "EUR" },
+    { country: "Jamaica", currency: "JMD" },
+    { country: "Japan", currency: "JPY" },
+    { country: "Jordan", currency: "JOD" },
+    { country: "Kazakhstan", currency: "KZT" },
+    { country: "Kenya", currency: "KES" },
+    { country: "Kuwait", currency: "KWD" },
+    { country: "Laos", currency: "LAK" },
+    { country: "Lebanon", currency: "LBP" },
+    { country: "Libya", currency: "LYD" },
+    { country: "Lithuania", currency: "EUR" },
+    { country: "Luxembourg", currency: "EUR" },
+    { country: "Macau", currency: "MOP" },
+    { country: "Malaysia", currency: "MYR" },
+    { country: "Maldives", currency: "MVR" },
+    { country: "Malta", currency: "EUR" },
+    { country: "Mauritius", currency: "MUR" },
+    { country: "Mexico", currency: "MXN" },
+    { country: "Moldova", currency: "MDL" },
+    { country: "Mongolia", currency: "MNT" },
+    { country: "Morocco", currency: "MAD" },
+    { country: "Mozambique", currency: "MZN" },
+    { country: "Myanmar", currency: "MMK" },
+    { country: "Nepal", currency: "NPR" },
+    { country: "Netherlands", currency: "EUR" },
+    { country: "New Zealand", currency: "NZD" },
+    { country: "Nicaragua", currency: "NIO" },
+    { country: "Nigeria", currency: "NGN" },
+    { country: "North Korea", currency: "KPW" },
+    { country: "Norway", currency: "NOK" },
+    { country: "Oman", currency: "OMR" },
+    { country: "Pakistan", currency: "PKR" },
+    { country: "Panama", currency: "PAB" },
+    { country: "Paraguay", currency: "PYG" },
+    { country: "Peru", currency: "PEN" },
+    { country: "Philippines", currency: "PHP" },
+    { country: "Poland", currency: "PLN" },
+    { country: "Portugal", currency: "EUR" },
+    { country: "Qatar", currency: "QAR" },
+    { country: "Romania", currency: "RON" },
+    { country: "Russia", currency: "RUB" },
+    { country: "Saudi Arabia", currency: "SAR" },
+    { country: "Senegal", currency: "XOF" },
+    { country: "Serbia", currency: "RSD" },
+    { country: "Singapore", currency: "SGD" },
+    { country: "Slovakia", currency: "EUR" },
+    { country: "Slovenia", currency: "EUR" },
+    { country: "South Africa", currency: "ZAR" },
+    { country: "South Korea", currency: "KRW" },
+    { country: "Spain", currency: "EUR" },
+    { country: "Sri Lanka", currency: "LKR" },
+    { country: "Sudan", currency: "SDG" },
+    { country: "Sweden", currency: "SEK" },
+    { country: "Switzerland", currency: "CHF" },
+    { country: "Syria", currency: "SYP" },
+    { country: "Taiwan", currency: "TWD" },
+    { country: "Tanzania", currency: "TZS" },
+    { country: "Thailand", currency: "THB" },
+    { country: "Trinidad and Tobago", currency: "TTD" },
+    { country: "Tunisia", currency: "TND" },
+    { country: "Turkey", currency: "TRY" },
+    { country: "Turkiye", currency: "TRY" },
+    { country: "Uganda", currency: "UGX" },
+    { country: "Ukraine", currency: "UAH" },
+    { country: "United Arab Emirates", currency: "AED" },
+    { country: "UAE", currency: "AED" },
+    { country: "United Kingdom", currency: "GBP" },
+    { country: "UK", currency: "GBP" },
+    { country: "United States", currency: "USD" },
+    { country: "USA", currency: "USD" },
+    { country: "Uruguay", currency: "UYU" },
+    { country: "Uzbekistan", currency: "UZS" },
+    { country: "Venezuela", currency: "VES" },
+    { country: "Vietnam", currency: "VND" },
+    { country: "Yemen", currency: "YER" },
+    { country: "Zambia", currency: "ZMW" },
+    { country: "Zimbabwe", currency: "ZWL" },
+];
+
+(function initCountrySearch() {
+
+    function setupSearch(inputId, dropdownId, targetSelectId) {
+        const searchInput = document.getElementById(inputId);
+        const dropdown = document.getElementById(dropdownId);
+
+        if (!searchInput || !dropdown) return;
+
+        function showDropdown(items) {
+            if (!items.length) {
+                dropdown.innerHTML = `<div class="country-no-result">No results found</div>`;
+                dropdown.style.display = "block";
+                return;
+            }
+
+            dropdown.innerHTML = items.map(item => `
+                <div class="country-item" data-currency="${item.currency}">
+                    <span class="country-item-name">${item.country}</span>
+                    <span class="country-item-currency">${item.currency}</span>
+                </div>
+            `).join("");
+
+            dropdown.querySelectorAll(".country-item").forEach(el => {
+                el.addEventListener("click", () => {
+                    const code = el.dataset.currency;
+                    const sel = document.getElementById(targetSelectId);
+
+                    // Set the dropdown if the code exists as an option
+                    const opt = [...sel.options].find(o => o.value === code);
+                    if (opt) {
+                        sel.value = code;
+                        convertCurrency();
+                    }
+
+                    searchInput.value = el.querySelector(".country-item-name").textContent;
+                    dropdown.style.display = "none";
+                });
+            });
+
+            dropdown.style.display = "block";
+        }
+
+        searchInput.addEventListener("input", () => {
+            const q = searchInput.value.trim().toLowerCase();
+            if (!q) { dropdown.style.display = "none"; return; }
+
+            const matches = COUNTRY_CURRENCY_MAP.filter(item =>
+                item.country.toLowerCase().includes(q)
+            ).slice(0, 10);
+
+            showDropdown(matches);
+        });
+
+        // Keyboard navigation
+        searchInput.addEventListener("keydown", e => {
+            const items = [...dropdown.querySelectorAll(".country-item")];
+            if (!items.length) return;
+
+            const active = dropdown.querySelector(".country-item.kb-focus");
+            let idx = items.indexOf(active);
+
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                if (active) active.classList.remove("kb-focus");
+                idx = (idx + 1) % items.length;
+                items[idx].classList.add("kb-focus");
+                items[idx].scrollIntoView({ block: "nearest" });
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                if (active) active.classList.remove("kb-focus");
+                idx = (idx - 1 + items.length) % items.length;
+                items[idx].classList.add("kb-focus");
+                items[idx].scrollIntoView({ block: "nearest" });
+            } else if (e.key === "Enter" && active) {
+                e.preventDefault();
+                active.click();
+            } else if (e.key === "Escape") {
+                dropdown.style.display = "none";
+            }
+        });
+    }
+
+    setupSearch("countrySearchFrom", "countryDropdownFrom", "from");
+    setupSearch("countrySearchTo", "countryDropdownTo", "to");
+
+    // Close dropdowns when clicking outside
+    document.addEventListener("click", e => {
+        if (!e.target.closest(".country-search-wrap")) {
+            document.querySelectorAll(".country-dropdown").forEach(d => d.style.display = "none");
+        }
+    });
+
+})();
 
 // Attach chart control buttons
 document.addEventListener('click', (e) => {
